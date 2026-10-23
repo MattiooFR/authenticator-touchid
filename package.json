@@ -1,0 +1,14 @@
+{
+  "name": "authenticator-touchid",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "zip": "cd src && zip -r ../authenticator.zip . -x '.*'",
+    "vendor": "mkdir -p src/vendor/noble-hashes && cd node_modules/@noble/hashes && cp argon2.js blake2.js _blake.js _md.js _u64.js utils.js legacy.js LICENSE ../../../src/vendor/noble-hashes/"
+  },
+  "devDependencies": {
+    "@noble/hashes": "2.4.0",
+    "vitest": "^5.0.5"
+  }
+}

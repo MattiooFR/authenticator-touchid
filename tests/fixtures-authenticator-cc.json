@@ -1,0 +1,46 @@
+{
+  "password": "correct horse",
+  "v3": {
+    "11111111-2222-4333-8444-555555555555": {
+      "dataType": "Key",
+      "id": "11111111-2222-4333-8444-555555555555",
+      "salt": "a1b2c3d4e5f60718293a4b5c6d7e8f90",
+      "hash": "$argon2id$v=19$m=19456,t=2,p=1$ignored$ignored",
+      "version": 3
+    },
+    "e1": {
+      "dataType": "EncOTPStorage",
+      "keyId": "11111111-2222-4333-8444-555555555555",
+      "index": 0,
+      "data": "U2FsdGVkX1+HquBI3yfhMuTQISV4E1MuBsKLcuO0Fd9HFPvWqv69N2NftI58CWhL5N4xGvfT1WH3Fexl+o4z9cyuW/EQz4hPa/QUgovpdzmKX9fu2e2MVJCJGrRaUjVZM/+yE+P0UcuBwgLQid0Rrw=="
+    },
+    "e2": {
+      "dataType": "EncOTPStorage",
+      "keyId": "11111111-2222-4333-8444-555555555555",
+      "index": 1,
+      "data": "U2FsdGVkX19/JJnFL7BeeMo0sOuczN9jAwifxKzGwLPNu200ArGjbeCXkmpoltRz7qoTfPjUGGOCfYJV/BUHHMdQxXhuLddOS/jZT19lMHu6pfGwwqULUh+mWl3sWY8J4vGMF/s/8eYXJz5OSDj6sQ=="
+    }
+  },
+  "v2": {
+    "key": {
+      "enc": "U2FsdGVkX1+qxrrF7pPgdbjeQjCx+z2e+sPUmR3CA4E=",
+      "hash": "x"
+    },
+    "a": {
+      "encrypted": true,
+      "type": "totp",
+      "issuer": "Google",
+      "account": "a@b.c",
+      "secret": "U2FsdGVkX18H15w3YunJfFuuPmzZAwwEAOh07qCh6nA8VWfnyJqj/5nYUb0TZmmy"
+    }
+  },
+  "v1": {
+    "b": {
+      "encrypted": true,
+      "type": "totp",
+      "issuer": "Battle",
+      "account": "x",
+      "secret": "U2FsdGVkX19f5H2iQEPerXSpKRhMWKyDn+5ZBcILaIA8s0FjlvwEU+pVKPmbhD2/"
+    }
+  }
+}
