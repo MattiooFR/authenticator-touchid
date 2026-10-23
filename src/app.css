@@ -272,6 +272,14 @@ details summary { cursor: pointer; color: var(--muted); font-size: 12px; margin-
   cursor: pointer;
 }
 
+.ask {
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  padding: 10px;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+.ask p { margin: 0 0 8px; }
 
 .cmd {
   display: block;

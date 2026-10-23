@@ -63,7 +63,7 @@ passent aussi par la messagerie native. Les passkeys (WebAuthn PRF) ont été es
 
 ## Filtrage par site
 
-- Copier un code sur un site associe ce site au compte (domaine racine : `app.supabase.com` → `supabase.com`).
+- Copier un code sur un nouveau site propose de l'associer au compte (domaine racine : `app.supabase.com` → `supabase.com`). Rien n'est associé sans « Oui, associer » : fermer la fenêtre vaut non.
 - À l'ouverture sur ce site, seuls les comptes associés s'affichent, triés par usage. « Tous les comptes » montre le reste.
 - Sans association, un compte dont le nom ressemble au domaine est proposé avec le badge « suggéré ».
 - Les sites associés se modifient dans « … » sur la carte.

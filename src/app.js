@@ -30,6 +30,7 @@ const state = {
   bioAvailable: false,
   bioInstalled: false,
   backupProblems: [],
+  pendingAssoc: null,
 };
 
 // ---------- utilitaires DOM ----------
@@ -356,16 +357,32 @@ async function copyAccount({ id }) {
     return;
   }
   const smart = state.settings.smartFilter;
-  const learned = smart && state.site && !acc.domains?.includes(state.site);
+  const associated = Boolean(state.site && acc.domains?.includes(state.site));
+  // Un site jamais associé à ce compte : on demande au lieu d'associer en silence.
+  // La question ne vit qu'en mémoire : fermer la fenêtre revient à répondre non.
+  const ask = smart && state.site && !associated;
   const bumped = acc.type === 'hotp' ? { ...acc, counter: acc.counter + 1 } : acc;
-  const updated = smart ? recordUse(bumped, state.site) : bumped;
+  const updated = smart && associated ? recordUse(bumped, state.site) : bumped;
   const filled = state.settings.autofill && state.site ? await fillActiveTab(code, state.tabId) : false;
   state.accounts = state.accounts.map((a) => (a.id === id ? updated : a));
+  state.pendingAssoc = ask ? { id, site: state.site } : null;
   await persist();
   await vault.touch();
-  toast([filled ? 'Copié et rempli' : 'Copié', learned ? `associé à ${state.site}` : ''].filter(Boolean).join(' · '));
-  if (!isTab && state.settings.closeAfterCopy) setTimeout(() => window.close(), 450);
-  else if (learned || acc.type === 'hotp') render();
+  toast(filled ? 'Copié et rempli' : 'Copié');
+  if (!ask && !isTab && state.settings.closeAfterCopy) setTimeout(() => window.close(), 450);
+  else if (ask || acc.type === 'hotp') render();
+}
+
+async function answerAssoc(yes) {
+  const pending = state.pendingAssoc;
+  state.pendingAssoc = null;
+  if (yes && pending) {
+    state.accounts = state.accounts.map((a) => (a.id === pending.id ? recordUse(a, pending.site) : a));
+    await persist();
+    toast(`Associé à ${pending.site}`);
+  }
+  if (yes && !isTab && state.settings.closeAfterCopy) setTimeout(() => window.close(), 450);
+  render();
 }
 
 const compareByName = (a, b) =>
@@ -474,7 +491,17 @@ function viewList() {
       ? h('button', { class: 'banner', onclick: () => go('settings') },
           `⚠ Sauvegarde ${problem.target === 'sync' ? 'Google' : 'dossier'} : ${problem.error}`)
       : null;
-    listWrap.replaceChildren(...[warn, bar, body].filter(Boolean));
+    const pendingAcc = state.pendingAssoc && state.accounts.find((a) => a.id === state.pendingAssoc.id);
+    const ask = pendingAcc
+      ? h('div', { class: 'ask' },
+          h('p', {}, 'Associer ', h('strong', {}, pendingAcc.issuer || pendingAcc.account || 'ce compte'), ' à ', h('strong', {}, state.pendingAssoc.site), ' ?'),
+          h('div', { class: 'row' },
+            h('button', { class: 'btn', onclick: () => answerAssoc(false) }, 'Non'),
+            h('button', { class: 'btn primary', onclick: () => answerAssoc(true) }, 'Oui, associer'),
+          ),
+        )
+      : null;
+    listWrap.replaceChildren(...[warn, ask, bar, body].filter(Boolean));
     updateCodes();
   }
 
@@ -957,7 +984,7 @@ function viewSettings() {
         toggle('autofill', 'Remplir le code dans la page en plus de le copier', true),
         h('p', {}, 'Seulement dans un champ qui ressemble à un champ 2FA. Sinon, le code est juste copié.'),
         toggle('smartFilter', 'Filtre intelligent par site', true),
-        h('p', {}, 'Retient les sites où tu copies chaque code et n’affiche que ceux-là quand tu y es.'),
+        h('p', {}, 'Quand tu copies un code sur un nouveau site, propose de l’associer au compte. Ensuite, n’affiche que les comptes associés quand tu y es.'),
       ),
       backupSection(err),
       h('div', { class: 'section stack' },
