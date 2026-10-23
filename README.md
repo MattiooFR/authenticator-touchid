@@ -69,6 +69,12 @@ passent aussi par la messagerie native. Les passkeys (WebAuthn PRF) ont été es
 - Les sites associés se modifient dans « … » sur la carte.
 - Scanner le QR code d'une page de configuration 2FA associe directement le compte à ce site.
 
+## Réorganiser
+
+Bouton ⇅ en haut de la liste : glisser un compte par sa poignée, flèches ↑ ↓ (⤒ pour tout en haut),
+ou au clavier sur la poignée (↑ ↓, ⌥↑ / ⌥↓ pour aller tout en haut ou tout en bas). « Trier de A à Z » remet l'ordre
+alphabétique. Sur un site, les comptes associés à ce site restent en tête.
+
 ## Remplissage automatique
 
 Cliquer sur un code (ou Entrée) le copie et le tape dans la page, seulement si un champ ressemble

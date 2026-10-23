@@ -41,6 +41,8 @@ const ICONS = {
   plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>',
   back: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>',
   dots: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>',
+  sort: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 4v16M3 8l4-4 4 4M17 20V4M13 16l4 4 4-4"/></svg>',
+  grip: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>',
   expand: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>',
 };
 
@@ -366,10 +368,14 @@ async function copyAccount({ id }) {
   else if (learned || acc.type === 'hotp') render();
 }
 
+const compareByName = (a, b) =>
+  (a.issuer || a.account).localeCompare(b.issuer || b.account, 'fr', { sensitivity: 'base' });
+
 function visibleAccounts() {
   const site = state.settings.smartFilter ? state.site : null;
   const { learned, guessed, others } = rankForSite(state.accounts, site, state.title);
-  const byName = (a, b) => (a.issuer || a.account).localeCompare(b.issuer || b.account, 'fr', { sensitivity: 'base' });
+  // Ordre choisi par l'utilisateur (vue « Réorganiser »), sinon alphabétique
+  const byName = state.settings.customOrder ? () => 0 : compareByName;
   const tag = (list, kind) => list.map((acc) => ({ acc, kind }));
   if (state.query) {
     return { items: [...tag(learned, 'learned'), ...tag(guessed, 'guessed'), ...tag(others.sort(byName), null)].filter((x) => matchesQuery(x.acc, state.query)), filtered: false };
@@ -480,6 +486,7 @@ function viewList() {
       actions: [
         iconBtn('scan', 'Scanner le QR code de la page', scanPage),
         iconBtn('plus', 'Ajouter un compte', () => go('add')),
+        state.accounts.length > 1 ? iconBtn('sort', 'Réorganiser', () => go('reorder')) : null,
         isTab ? null : iconBtn('expand', 'Ouvrir dans un onglet', () => openInTab()),
         iconBtn('gear', 'Réglages', () => go('settings')),
         iconBtn('lock', 'Verrouiller', async () => {
@@ -489,6 +496,98 @@ function viewList() {
       ],
     }),
     h('div', { class: 'content' }, search, listWrap),
+  ];
+}
+
+// Réorganiser : glisser-déposer (poignée) ou flèches ↑ ↓, enregistré à chaque changement.
+function viewReorder() {
+  const list = h('div', { class: 'reorder' });
+  let dragId = null;
+
+  const save = async (accounts) => {
+    state.accounts = accounts;
+    await persist();
+    if (!state.settings.customOrder) {
+      await vault.saveSettings({ customOrder: true });
+      state.settings = await vault.getSettings();
+    }
+    draw();
+  };
+  const move = (from, to) => {
+    if (to < 0 || to >= state.accounts.length || from === to) return;
+    const next = [...state.accounts];
+    const [acc] = next.splice(from, 1);
+    next.splice(to, 0, acc);
+    save(next).then(() => list.querySelector(`[data-id="${acc.id}"] .handle`)?.focus());
+  };
+
+  function draw() {
+    // Premier passage : on part de l'ordre affiché (alphabétique si jamais réorganisé)
+    const ordered = state.settings.customOrder ? state.accounts : [...state.accounts].sort(compareByName);
+    if (!state.settings.customOrder) state.accounts = ordered;
+    list.replaceChildren(...ordered.map((acc, i) => {
+      const row = h('div', {
+        class: 'reorder-row',
+        draggable: true,
+        'data-id': acc.id,
+        ondragstart: (e) => {
+          dragId = acc.id;
+          e.dataTransfer.effectAllowed = 'move';
+          row.classList.add('dragging');
+        },
+        ondragend: () => {
+          dragId = null;
+          row.classList.remove('dragging');
+          list.querySelectorAll('.over-top, .over-bottom').forEach((el) => el.classList.remove('over-top', 'over-bottom'));
+        },
+        ondragover: (e) => {
+          if (!dragId || dragId === acc.id) return;
+          e.preventDefault();
+          const below = e.offsetY > row.offsetHeight / 2;
+          row.classList.toggle('over-bottom', below);
+          row.classList.toggle('over-top', !below);
+        },
+        ondragleave: () => row.classList.remove('over-top', 'over-bottom'),
+        ondrop: (e) => {
+          e.preventDefault();
+          const from = state.accounts.findIndex((a) => a.id === dragId);
+          let to = i + (row.classList.contains('over-bottom') ? 1 : 0);
+          if (from < to) to -= 1;
+          move(from, to);
+        },
+      },
+        h('button', {
+          class: 'handle',
+          icon: 'grip',
+          title: 'Glisser, ou flèches ↑ ↓ du clavier',
+          'aria-label': `Déplacer ${acc.issuer || acc.account}`,
+          onkeydown: (e) => {
+            if (e.key === 'ArrowUp') { e.preventDefault(); move(i, e.altKey ? 0 : i - 1); }
+            if (e.key === 'ArrowDown') { e.preventDefault(); move(i, e.altKey ? state.accounts.length - 1 : i + 1); }
+          },
+        }),
+        h('div', { class: 'who' },
+          h('span', { class: 'issuer' }, acc.issuer || acc.account || 'Sans nom'),
+          acc.issuer && acc.account ? h('div', { class: 'account' }, acc.account) : null,
+        ),
+        h('button', { class: 'icon-btn small', title: 'Tout en haut', disabled: i === 0, onclick: () => move(i, 0) }, '⤒'),
+        h('button', { class: 'icon-btn small', title: 'Monter', disabled: i === 0, onclick: () => move(i, i - 1) }, '↑'),
+        h('button', { class: 'icon-btn small', title: 'Descendre', disabled: i === ordered.length - 1, onclick: () => move(i, i + 1) }, '↓'),
+      );
+      return row;
+    }));
+  }
+  draw();
+
+  return [
+    header('Réorganiser', { back: true }),
+    h('div', { class: 'content' },
+      h('p', { class: 'notice' }, 'Glisse un compte par sa poignée, ou utilise les flèches. Sur un site, les comptes associés restent en tête.'),
+      h('div', { class: 'row-actions' },
+        h('button', { class: 'btn', onclick: () => save([...state.accounts].sort(compareByName)) }, 'Trier de A à Z'),
+      ),
+      list,
+    ),
   ];
 }
 
@@ -964,6 +1063,7 @@ const VIEWS = {
   list: viewList,
   add: viewAdd,
   edit: viewEdit,
+  reorder: viewReorder,
   import: viewImport,
   settings: viewSettings,
 };

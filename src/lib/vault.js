@@ -16,6 +16,7 @@ export const DEFAULT_SETTINGS = {
   closeAfterCopy: true,
   autofill: true,
   smartFilter: true,
+  customOrder: false, // true dès que l'utilisateur a réorganisé ses comptes ; sinon ordre alphabétique
   backupSync: true,
   backupFolder: false,
 };

@@ -282,3 +282,37 @@ details summary { cursor: pointer; color: var(--muted); font-size: 12px; margin-
   word-break: break-all;
   user-select: all;
 }
+
+/* Réorganiser */
+.reorder { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+.reorder-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 8px 8px 4px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card, transparent);
+}
+.reorder-row .who { flex: 1; min-width: 0; }
+.reorder-row .issuer { font-weight: 600; font-size: 13px; }
+.reorder-row .account { color: var(--muted); font-size: 12px; }
+.reorder-row .issuer, .reorder-row .account { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+.reorder-row.dragging { opacity: 0.4; }
+.reorder-row.over-top { box-shadow: 0 -3px 0 var(--accent); }
+.reorder-row.over-bottom { box-shadow: 0 3px 0 var(--accent); }
+.reorder .handle {
+  cursor: grab;
+  width: 26px;
+  height: 30px;
+  padding: 3px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  border-radius: 6px;
+}
+.reorder .handle:focus-visible { outline: 2px solid var(--accent); }
+.reorder .handle svg { width: 100%; height: 100%; }
+.icon-btn.small { width: 28px; height: 28px; font-size: 15px; }
+.icon-btn.small:disabled { opacity: 0.3; cursor: default; }
+.row-actions { display: flex; justify-content: flex-end; }
