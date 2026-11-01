@@ -291,6 +291,12 @@ details summary { cursor: pointer; color: var(--muted); font-size: 12px; margin-
   user-select: all;
 }
 
+/* Exporter la clé */
+.key-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.key-row .cmd { flex: 1; min-width: 0; }
+.cmd.masked { user-select: none; }
+.section .key-hint { margin: 8px 0 0; }
+
 /* Réorganiser */
 .reorder { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
 .reorder-row {

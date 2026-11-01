@@ -75,6 +75,16 @@ Bouton ⇅ en haut de la liste : glisser un compte par sa poignée, flèches ↑
 ou au clavier sur la poignée (↑ ↓, ⌥↑ / ⌥↓ pour aller tout en haut ou tout en bas). « Trier de A à Z » remet l'ordre
 alphabétique. Sur un site, les comptes associés à ce site restent en tête.
 
+## Exporter une clé
+
+« … » sur la carte → **Exporter vers un autre gestionnaire** :
+
+- **Copier la clé** : la clé secrète (Base32), à coller en saisie manuelle. Elle reste masquée à l'écran tant qu'on ne clique pas sur « Afficher ».
+- **Copier le lien** : le lien `otpauth://`, qui garde aussi le nom et les réglages.
+- Si le compte n'utilise pas les réglages courants (SHA-1, 6 chiffres, 30 s), l'écran dit quoi régler dans l'autre gestionnaire.
+
+La clé reste dans le presse-papiers jusqu'à la prochaine copie. Pour tout exporter d'un coup : Réglages → « Exporter en clair ».
+
 ## Remplissage automatique
 
 Cliquer sur un code (ou Entrée) le copie et le tape dans la page, seulement si un champ ressemble

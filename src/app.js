@@ -1,7 +1,7 @@
 import { hotp, secondsLeft, totp, totpCounter } from './lib/totp.js';
 import { matchesQuery, rankForSite, recordUse, siteFromUrl } from './lib/domains.js';
 import {
-  isEncryptedAuthenticatorCc, makeAccount, mergeAccounts, parseAuthenticatorCcEncrypted, parseImport, toOtpauth,
+  isEncryptedAuthenticatorCc, makeAccount, mergeAccounts, nonStandardParams, parseAuthenticatorCcEncrypted, parseImport, toOtpauth,
 } from './lib/importers.js';
 import { INSTALL_COMMAND, askBackground } from './lib/touchid.js';
 import { LEVELS, MIN_LEVEL, ATTACK_GPUS, estimateStrength, formatDuration, strengthHint } from './lib/strength.js';
@@ -426,7 +426,7 @@ function card({ acc, kind }, index) {
       h('button', {
         class: 'icon-btn',
         icon: 'dots',
-        title: 'Modifier',
+        title: 'Modifier ou exporter la clé',
         onclick: (e) => {
           e.stopPropagation();
           go('edit', { editId: acc.id });
@@ -780,6 +780,30 @@ function viewEdit() {
     },
   }, 'Supprimer ce compte');
 
+  // La clé n'entre dans la page que si on demande à la voir.
+  const KEY_MASK = '•••• •••• •••• ••••';
+  const keyBox = h('code', { class: 'cmd masked' }, KEY_MASK);
+  let keyShown = false;
+  const keyToggle = h('button', {
+    type: 'button',
+    class: 'link',
+    onclick: () => {
+      keyShown = !keyShown;
+      keyBox.textContent = keyShown ? acc.secret : KEY_MASK;
+      keyBox.classList.toggle('masked', !keyShown);
+      keyToggle.textContent = keyShown ? 'Masquer' : 'Afficher';
+    },
+  }, 'Afficher');
+  const copyExport = async (text, done) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast(done);
+    } catch (e) {
+      toast(`Copie impossible : ${e.message}`);
+    }
+  };
+  const params = nonStandardParams(acc);
+
   return [
     header('Modifier', { back: true }),
     h('form', { class: 'content', onsubmit: save },
@@ -795,6 +819,22 @@ function viewEdit() {
       ),
       h('button', { class: 'btn primary block big' }, 'Enregistrer'),
       err,
+      h('div', { class: 'section', style: 'margin-top:14px' },
+        h('h3', {}, 'Exporter vers un autre gestionnaire'),
+        h('p', {}, 'Cette clé génère les codes : qui la possède peut les produire. Ne la colle que dans ton gestionnaire.'),
+        h('div', { class: 'key-row' }, keyBox, keyToggle),
+        params.length ? h('p', {}, `À régler aussi là-bas : ${params.join(', ')}.`) : null,
+        h('div', { class: 'row' },
+          h('button', { type: 'button', class: 'btn', onclick: () => copyExport(acc.secret, 'Clé copiée') }, 'Copier la clé'),
+          h('button', {
+            type: 'button',
+            class: 'btn',
+            title: 'Lien otpauth:// : contient aussi le nom et les réglages',
+            onclick: () => copyExport(toOtpauth({ ...acc, issuer: issuer.value.trim(), account: account.value.trim() }), 'Lien copié'),
+          }, 'Copier le lien'),
+        ),
+        h('p', { class: 'key-hint' }, 'La clé se colle en saisie manuelle. Le lien otpauth:// garde aussi le nom et les réglages, si l’autre gestionnaire l’accepte.'),
+      ),
       h('div', { style: 'margin-top:14px' }, del),
     ),
   ];

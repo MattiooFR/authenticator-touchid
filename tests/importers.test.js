@@ -1,5 +1,24 @@
 import { describe, expect, it } from 'vitest';
-import { mergeAccounts, parseImport, parseOtpauth, toOtpauth } from '../src/lib/importers.js';
+import { makeAccount, mergeAccounts, nonStandardParams, parseImport, parseOtpauth, toOtpauth } from '../src/lib/importers.js';
+
+// Ce qu'il faut régler à la main dans l'autre gestionnaire quand on n'y colle que la clé.
+describe('nonStandardParams', () => {
+  const base = { secret: 'JBSWY3DPEHPK3PXP' };
+  it('ne signale rien pour un compte standard', () => {
+    expect(nonStandardParams(makeAccount(base))).toEqual([]);
+  });
+  it('signale l’algorithme, le nombre de chiffres et la période', () => {
+    expect(nonStandardParams(makeAccount({ ...base, algorithm: 'SHA256', digits: 8, period: 60 })))
+      .toEqual(['algorithme SHA256', '8 chiffres', 'période 60 s']);
+  });
+  it('signale le compteur d’un compte HOTP, sans parler de période', () => {
+    expect(nonStandardParams(makeAccount({ ...base, type: 'hotp', counter: 7, period: 60 })))
+      .toEqual(['type HOTP', 'compteur 7']);
+  });
+  it('signale un compte Steam', () => {
+    expect(nonStandardParams(makeAccount({ ...base, encoding: 'steam' }))).toEqual(['format Steam']);
+  });
+});
 
 describe('otpauth', () => {
   it('lit émetteur, compte et paramètres', () => {

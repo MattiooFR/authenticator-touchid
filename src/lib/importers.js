@@ -62,6 +62,18 @@ export function toOtpauth(acc) {
   return `otpauth://${acc.type}/${label}?${p}`;
 }
 
+// Ce que la clé seule ne dit pas : à régler à la main dans l'autre gestionnaire.
+export function nonStandardParams(acc) {
+  const params = [];
+  if (acc.type === 'hotp') params.push('type HOTP');
+  if (acc.encoding === 'steam') params.push('format Steam');
+  if (acc.algorithm !== 'SHA1') params.push(`algorithme ${acc.algorithm}`);
+  if (acc.digits !== 6) params.push(`${acc.digits} chiffres`);
+  if (acc.type === 'hotp') params.push(`compteur ${acc.counter}`);
+  else if (acc.period !== 30) params.push(`période ${acc.period} s`);
+  return params;
+}
+
 // --- Export Google Authenticator (otpauth-migration://offline?data=…, protobuf) ---
 
 function readVarint(buf, pos) {
